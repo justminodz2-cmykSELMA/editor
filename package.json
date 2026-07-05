@@ -5,7 +5,13 @@
   "description": "AI Creative Studio — full professional videos from a single prompt",
   "workspaces": ["server", "web"],
   "scripts": {
-    "server": "npm start --workspace server",
-    "web": "npm run dev --workspace web"
+    "dev": "concurrently -n server,web -c blue,magenta \"npm run start --workspace server\" \"npm run dev --workspace web\"",
+    "start": "npm run dev",
+    "server": "npm run start --workspace server",
+    "web": "npm run dev --workspace web",
+    "build": "npm run build --workspace web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
   }
 }
