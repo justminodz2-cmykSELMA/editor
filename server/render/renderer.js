@@ -73,7 +73,12 @@ export async function renderProject(project, outDir) {
   // 5. Color grade + mux + subtitles
   const eq = `eq=contrast=${grade.contrast ?? 1.06}:saturation=${grade.saturation ?? 1.12}`;
   const srt = project.stages.subtitles?.output?.file;
-  const vf = srt ? `${eq},subtitles='${srt.replace(/'/g, "\\'")}'` : eq;
+  // ffmpeg's subtitles filter needs forward slashes and an escaped drive colon on Windows
+  // (e.g. C\:/path/subs.srt) — raw backslashes get swallowed by the filter parser.
+  const srtSafe = srt
+    ? path.resolve(srt).replace(/\\/g, '/').replace(/:/g, '\\:').replace(/'/g, "\\'")
+    : null;
+  const vf = srtSafe ? `${eq},subtitles='${srtSafe}'` : eq;
   const finalFile = path.join(outDir, 'final.mp4');
   const args = ['-y', '-i', silent];
   if (fs.existsSync(mixed)) args.push('-i', mixed);

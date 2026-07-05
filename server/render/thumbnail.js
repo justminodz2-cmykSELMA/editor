@@ -15,7 +15,7 @@ export async function createThumbnail(design, outDir) {
       '-gravity', 'southwest', '-pointsize', '110', '-font', 'DejaVu-Sans-Bold',
       '-stroke', 'black', '-strokewidth', '8', '-fill', 'white', '-annotate', '+60+60', text, out]);
   } catch {
-    await exec('cp', [base.file, out]);
+    fs.copyFileSync(base.file, out); // cross-platform (no `cp` on Windows)
   }
   return out;
 }
