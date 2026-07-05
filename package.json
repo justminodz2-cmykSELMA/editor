@@ -1,0 +1,11 @@
+{
+  "name": "ai-creative-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI Creative Studio — full professional videos from a single prompt",
+  "workspaces": ["server", "web"],
+  "scripts": {
+    "server": "npm start --workspace server",
+    "web": "npm run dev --workspace web"
+  }
+}
