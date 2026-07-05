@@ -89,19 +89,33 @@ const providers = [
     name: 'gemini',
     available: () => !!config.keys.gemini,
     call: async (system, user) => {
-      const r = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${config.keys.gemini}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: system }] },
-            contents: [{ parts: [{ text: user }] }],
-            generationConfig: { responseMimeType: 'application/json' },
-          }),
-        },
-      );
-      return (await checked('gemini', r)).candidates[0].content.parts[0].text;
+      // Current model IDs per https://ai.google.dev/gemini-api/docs/models
+      // (gemini-2.0-flash and 2.0-flash-lite are SHUT DOWN — do not use).
+      // Tries each model in order; skips to the next on 404/429.
+      const models = process.env.GEMINI_MODEL
+        ? [process.env.GEMINI_MODEL]
+        : ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-3.1-flash-lite', 'gemini-3.5-flash'];
+      let lastErr;
+      for (const model of models) {
+        const r = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.keys.gemini}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: system }] },
+              contents: [{ parts: [{ text: user }] }],
+              generationConfig: { responseMimeType: 'application/json' },
+            }),
+          },
+        );
+        if (r.ok) return (await r.json()).candidates[0].content.parts[0].text;
+        const body = await r.text().catch(() => '');
+        console.warn(`[llm] gemini ${model} → ${r.status}: ${body.slice(0, 300)}`);
+        lastErr = new HttpError(`gemini(${model})`, r, body);
+        if (r.status !== 404 && r.status !== 429) throw lastErr; // other errors: don't model-hop
+      }
+      throw lastErr;
     },
   },
 ];
