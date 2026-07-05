@@ -18,15 +18,24 @@ const EXAMPLES = [
  * type one prompt and the multi-agent pipeline produces a complete video,
  * streaming live progress into the conversation.
  */
-export default function StudioChat({ project, onProject }) {
+export default function StudioChat({ project, onProject, initialPrompt }) {
   const [messages, setMessages] = useState([
-    { role: 'studio', text: 'Welcome to the AI Creative Studio. Describe the video you want — I will handle script, voices, assets, 3D, music, editing and export.' },
+    { role: 'studio', text: 'Welcome to Editor. Describe the video you want — I will handle script, voices, assets, 3D, music, editing and export.' },
   ]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const bottom = useRef(null);
+  const started = useRef(false);
 
   useEffect(() => bottom.current?.scrollIntoView({ behavior: 'smooth' }), [messages]);
+
+  useEffect(() => {
+    if (initialPrompt && !started.current) {
+      started.current = true;
+      submit(initialPrompt);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPrompt]);
 
   const push = (m) => setMessages(prev => [...prev, m]);
 

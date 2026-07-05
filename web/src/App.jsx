@@ -1,21 +1,30 @@
 import React, { useState } from 'react';
+import Home from './components/Home.jsx';
 import StudioChat from './components/StudioChat.jsx';
 import PipelineView from './components/PipelineView.jsx';
 import Storyboard from './components/Storyboard.jsx';
 import Timeline from './components/Timeline.jsx';
 
 /**
- * Main dashboard with the built-in AI Creative Studio (chat command center).
- * One prompt in the chat → full production. Every stage is inspectable and editable.
+ * Editor — AI Creative Studio.
+ * Landing hero → one prompt → the lights dim and the studio takes over.
  */
 export default function App() {
   const [project, setProject] = useState(null);
   const [tab, setTab] = useState('pipeline');
+  const [initialPrompt, setInitialPrompt] = useState(null);
+  const [inStudio, setInStudio] = useState(false);
+
+  if (!inStudio) {
+    return <Home onStart={(p) => { setInitialPrompt(p); setInStudio(true); }} />;
+  }
 
   return (
     <div className="app">
       <header className="topbar">
-        <div className="logo">🎬 AI Creative Studio</div>
+        <div className="logo" onClick={() => { setInStudio(false); setInitialPrompt(null); }} style={{ cursor: 'pointer' }}>
+          🎬 Editor <span className="logo-sub">AI Creative Studio</span>
+        </div>
         <nav>
           {['pipeline', 'storyboard', 'timeline', 'export'].map(t => (
             <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>
@@ -27,7 +36,7 @@ export default function App() {
 
       <main className="layout">
         <section className="left">
-          <StudioChat project={project} onProject={setProject} />
+          <StudioChat project={project} onProject={setProject} initialPrompt={initialPrompt} />
         </section>
         <section className="right">
           {tab === 'pipeline' && <PipelineView project={project} />}
